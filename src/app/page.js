@@ -5,8 +5,10 @@ export default function Home() {
       font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
         <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <h1 className="animate-slidein opacity-0 [--slidein-delay:300ms] sm:text-3xl md:text-3xl lg:text-6xl">
-            <b>Welcome to Taskly – Simplify Teamwork, Amplify Success!</b>
+          <h1 className="animate-slidein opacity-0 [--slidein-delay:300ms] sm:text-3xl md:text-3xl lg:text-6xl 
+          relative w-[max-content] before:absolute before:inset-0 before:animate-typewriter before:bg-white after:absolute 
+          after:inset-0 after:w-[0.125em] after:animate-caret after:bg-black">
+            <b>Welcome to Taskly – Simplify Teamwork!</b>
           </h1>
         </div>
         <h4 className="animate-slidein opacity-0 [--slidein-delay:300ms]">
