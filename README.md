@@ -1,4 +1,4 @@
-# To-Do List Web Application
+# Taskly: To-Do List Web Application
 
 Welcome to the **To-Do List Web Application**, a simple yet powerful tool designed specifically for small organizations to stay organized and achieve more. This app enables teams to efficiently track their tasks, streamline their workflows, and boost overall productivity.
 
