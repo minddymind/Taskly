@@ -22,6 +22,9 @@ export default function Login() {
     // If validation passes, proceed to the next page
     setError("");
     // router.push("/");  // redirect after successful login
+    setTimeout(() => {
+      window.location.href = "/dashboard"; // This will navigate to the dashboard page after 1 second
+    }, 1000); // Wait for 1 second before redirecting
   };
 
   // Handle "Sign up" link click with delay
