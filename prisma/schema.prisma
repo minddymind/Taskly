@@ -27,10 +27,10 @@ model Employee{
 model Department{
   department_id  Int  @id  @default(autoincrement())
   department_name  String  @db.VarChar(100)  @unique
-  manager_id  Int
+  manager_id  Int?
 
   employee  Employee[]
-  current_manager  Employee @relation("managedDepartment", fields: [manager_id], references: [emp_id])
+  current_manager  Employee? @relation("managedDepartment", fields: [manager_id], references: [emp_id])
 }
 
 enum ProgressStatus {
