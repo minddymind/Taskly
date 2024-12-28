@@ -5,9 +5,9 @@ import { PencilAltIcon, TrashIcon, LogoutIcon, HomeIcon, UsersIcon } from '@hero
 
 const Taskly = () => {
   const currentUser = { 
-    name: "John", 
+    name: "Alice", 
     surname: "Doe",
-    avatar: `https://avatar.iran.liara.run/username?username=${"John"}+${"Doe"}`,
+    avatar: `https://avatar.iran.liara.run/username?username=${"Alice"}+${"Doe"}`,
   };
 
   const [columns, setColumns] = useState({
@@ -25,7 +25,14 @@ const Taskly = () => {
     if (newTask.trim()) {
       setColumns({
         ...columns,
-        [column]: [...columns[column], { id: `${column}-${Date.now()}`, name: newTask }],
+        [column]: [
+          ...columns[column], 
+          { 
+            id: `${column}-${Date.now()}`, 
+            name: newTask,
+            user: `${currentUser.name} ${currentUser.surname}`  // เพิ่มชื่อผู้ใช้งาน
+          }
+        ],
       });
       setNewTask("");
       setIsAdding((prev) => ({ ...prev, [column]: false }));
@@ -54,6 +61,13 @@ const Taskly = () => {
 
   const handleLogout = () => {
     alert("Logging out..."); // เพิ่มการดำเนินการเมื่อ logout เช่น redirect หรือ clear session
+  };
+
+  // สีที่ใช้สำหรับ border ของแต่ละคอลัมน์
+  const columnBorderColors = {
+    "To Do": "bg-blue-500",
+    "Doing": "bg-yellow-500",
+    "Done": "bg-green-500",
   };
 
   return (
@@ -113,70 +127,76 @@ const Taskly = () => {
           <div className="grid grid-cols-3 gap-8">
             {Object.keys(columns).map((column) => (
               <div
-                key={column}
-                className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-all backdrop-blur-md"
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {column} ({columns[column].length})
-                  </h3>
-                  <button
-                    onClick={() => setIsAdding((prev) => ({ ...prev, [column]: !prev[column] }))}
-                    className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition"
+              key={column}
+              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-all backdrop-blur-md"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {column} 
+                  <span
+                    className={`ml-2 text-sm text-white px-2 py-1 rounded-full ${columnBorderColors[column]}`}
                   >
-                    + Add Task
-                  </button>
+                    {columns[column].length}
+                  </span>
+                </h3>
+                <button
+                  onClick={() => setIsAdding((prev) => ({ ...prev, [column]: !prev[column] }))}
+                  className="bg-gray-700 text-white px-3 py-1 rounded-lg hover:bg-gray-900 transition"
+                >
+                  + Add Task
+                </button>
+              </div>
+              {isAdding[column] && (
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    placeholder="Enter a task title"
+                    value={newTask}
+                    onChange={(e) => setNewTask(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg mb-3"
+                  />
+                  <div className="flex justify-between">
+                    <button
+                      onClick={() => handleAddTask(column)}
+                      className="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition"
+                    >
+                      Add
+                    </button>
+                    <button
+                      onClick={() => setIsAdding((prev) => ({ ...prev, [column]: false }))}
+                      className="text-red-500 px-4 py-2"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
-                {isAdding[column] && (
-                  <div className="mb-4">
-                    <input
-                      type="text"
-                      placeholder="Enter a task title"
-                      value={newTask}
-                      onChange={(e) => setNewTask(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg mb-3"
-                    />
-                    <div className="flex justify-between">
+              )}
+              <ul className="space-y-3 overflow-auto">
+                {columns[column].map((task) => (
+                  <li
+                    key={task.id}
+                    className="bg-gray-200 p-4 rounded-lg flex justify-between items-center transition-all hover:bg-gray-300"
+                  >
+                    <span className="text-gray-700 break-words">{task.name}</span>
+                    <span className="text-sm text-gray-500">{task.user}</span> {/* แสดงชื่อผู้ใช้งาน */}
+                    <div className="space-x-4 flex items-center">
                       <button
-                        onClick={() => handleAddTask(column)}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+                        onClick={() => handleEditTask(column, task.id)}
+                        className="text-blue-500 hover:text-blue-600"
                       >
-                        Add
+                        <PencilAltIcon className="w-5 h-5" />
                       </button>
                       <button
-                        onClick={() => setIsAdding((prev) => ({ ...prev, [column]: false }))}
-                        className="text-red-500 px-4 py-2"
+                        onClick={() => handleDeleteTask(column, task.id)}
+                        className="text-red-500 hover:text-red-600"
                       >
-                        ✕
+                        <TrashIcon className="w-5 h-5" />
                       </button>
                     </div>
-                  </div>
-                )}
-                <ul className="space-y-3 overflow-auto">
-                  {columns[column].map((task) => (
-                    <li
-                      key={task.id}
-                      className="bg-gray-200 p-4 rounded-lg flex justify-between items-center transition-all hover:bg-gray-300"
-                    >
-                      <span className="text-gray-700 break-words">{task.name}</span>
-                      <div className="space-x-4 flex items-center">
-                        <button
-                          onClick={() => handleEditTask(column, task.id)}
-                          className="text-blue-500 hover:text-blue-600"
-                        >
-                          <PencilAltIcon className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteTask(column, task.id)}
-                          className="text-red-500 hover:text-red-600"
-                        >
-                          <TrashIcon className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                  </li>
+                ))}
+              </ul>
+            </div> 
             ))}
           </div>
         </main>
