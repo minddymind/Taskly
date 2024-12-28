@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react";
+import { LogoutIcon } from '@heroicons/react/outline'; // ใช้ไอคอนจาก Heroicons
 
 const Taskly = () => {
   const currentUser = { 
@@ -51,14 +52,22 @@ const Taskly = () => {
     });
   };
 
+  const handleLogout = () => {
+    alert("Logging out..."); // เพิ่มการดำเนินการเมื่อ logout เช่น redirect หรือ clear session
+  };
+
   return (
     <div className="flex h-screen bg-gray-50 text-gray-800">
       {/* Sidebar */}
       <aside className="w-64 bg-gray-800 text-white p-6 flex flex-col">
-        <h1 className="text-2xl font-bold mb-8">Taskly</h1>
+        <h1 className="text-4xl font-bold mb-8">Taskly</h1>
         <div className="flex items-center mb-6 border-t border-b border-gray-700 pt-4 pb-4">
-          <img src={currentUser.avatar} alt="User Avatar" className="w-12 h-12 rounded-full mr-3" />
-          <span className="text-xl font-semibold">{currentUser.name} {currentUser.surname}</span>
+            <img src={currentUser.avatar} alt="User Avatar" className="w-12 h-12 rounded-full mr-3" />
+            <div>
+                <span className="text-xl font-semibold">{currentUser.name} {currentUser.surname}</span>
+                <span className="block text-sm text-gray-400 mt-1">ID: 650510655</span>
+                <span className="block text-sm text-gray-400 mt-1">Human Resource</span>
+            </div>
         </div>
         <ul>
           <li className="mb-4"><a href="/" className="hover:text-blue-500">Home</a></li>
@@ -75,7 +84,6 @@ const Taskly = () => {
               ))}
             </ul>
           )}
-          <li className="mb-4 cursor-pointer hover:text-blue-500">Settings</li>
         </ul>
       </aside>
 
@@ -87,6 +95,12 @@ const Taskly = () => {
           <div className="flex items-center">
             <img src={currentUser.avatar} alt="User Avatar" className="w-8 h-8 rounded-full mr-2" />
             <span>{currentUser.name} {currentUser.surname}</span>
+            <button
+              onClick={handleLogout}
+              className="ml-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+            >
+              <LogoutIcon className="w-5 h-5" />
+            </button>
           </div>
         </header>
 
