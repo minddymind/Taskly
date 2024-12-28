@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import { LogoutIcon } from '@heroicons/react/outline'; // ใช้ไอคอนจาก Heroicons
+import { PencilAltIcon, TrashIcon, LogoutIcon, HomeIcon, UsersIcon } from '@heroicons/react/outline'; // นำเข้าไอคอน Home และ Users
 
 const Taskly = () => {
   const currentUser = { 
@@ -57,24 +57,28 @@ const Taskly = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 text-gray-800">
+    <div className="flex h-screen text-gray-800">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-800 text-white p-6 flex flex-col">
+      <aside className="w-64 bg-gray-800 text-white p-6 flex flex-col shadow-lg rounded-r-2xl backdrop-blur-md">
         <h1 className="text-4xl font-bold mb-8">Taskly</h1>
         <div className="flex items-center mb-6 border-t border-b border-gray-700 pt-4 pb-4">
-            <img src={currentUser.avatar} alt="User Avatar" className="w-12 h-12 rounded-full mr-3" />
-            <div>
-                <span className="text-xl font-semibold">{currentUser.name} {currentUser.surname}</span>
-                <span className="block text-sm text-gray-400 mt-1">ID: 650510655</span>
-                <span className="block text-sm text-gray-400 mt-1">Human Resource</span>
-            </div>
+          <img src={currentUser.avatar} alt="User Avatar" className="w-12 h-12 rounded-full mr-3" />
+          <div>
+            <span className="text-xl font-semibold">{currentUser.name} {currentUser.surname}</span>
+            <span className="block text-sm text-gray-500 mt-1">ID: 650510655</span>
+            <span className="block text-sm text-gray-500 mt">Human Resource</span>
+          </div>
         </div>
         <ul>
-          <li className="mb-4"><a href="/" className="hover:text-blue-500">Home</a></li>
+          <li className="mb-4 flex items-center hover:text-blue-500 transition duration-200 ease-in-out">
+            <HomeIcon className="w-5 h-5 mr-2" />
+            <a href="/" className="hover:text-blue-500">Home</a>
+          </li>
           <li 
-            className="mb-4 cursor-pointer hover:text-blue-500"
+            className="mb-4 cursor-pointer flex items-center hover:text-blue-500 transition duration-200 ease-in-out"
             onClick={() => setShowMembers(!showMembers)}
           >
+            <UsersIcon className="w-5 h-5 mr-2" />
             Members
           </li>
           {showMembers && (
@@ -88,16 +92,16 @@ const Taskly = () => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-white bg-opacity-70 backdrop-blur-md rounded-l-2xl">
         {/* Top Navbar */}
         <header className="bg-white shadow-md p-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-800">HR Board</h2>
+          <h2 className="text-xl font-semibold text-gray-800 ml-4">HR Board</h2>
           <div className="flex items-center">
             <img src={currentUser.avatar} alt="User Avatar" className="w-8 h-8 rounded-full mr-2" />
             <span>{currentUser.name} {currentUser.surname}</span>
             <button
               onClick={handleLogout}
-              className="ml-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+              className="ml-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
             >
               <LogoutIcon className="w-5 h-5" />
             </button>
@@ -105,12 +109,17 @@ const Taskly = () => {
         </header>
 
         {/* Board Content */}
-        <main className="flex-1 p-6 overflow-auto bg-gray-100">
+        <main className="flex-1 p-6 overflow-auto bg-gray-100 backdrop-blur-md">
           <div className="grid grid-cols-3 gap-8">
             {Object.keys(columns).map((column) => (
-              <div key={column} className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-all">
+              <div
+                key={column}
+                className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-all backdrop-blur-md"
+              >
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-semibold text-gray-800">{column}</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {column} ({columns[column].length})
+                  </h3>
                   <button
                     onClick={() => setIsAdding((prev) => ({ ...prev, [column]: !prev[column] }))}
                     className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition"
@@ -143,25 +152,25 @@ const Taskly = () => {
                     </div>
                   </div>
                 )}
-                <ul className="space-y-3">
+                <ul className="space-y-3 overflow-auto">
                   {columns[column].map((task) => (
                     <li
                       key={task.id}
                       className="bg-gray-200 p-4 rounded-lg flex justify-between items-center transition-all hover:bg-gray-300"
                     >
-                      <span className="text-gray-700">{task.name}</span>
-                      <div className="space-x-4">
+                      <span className="text-gray-700 break-words">{task.name}</span>
+                      <div className="space-x-4 flex items-center">
                         <button
                           onClick={() => handleEditTask(column, task.id)}
                           className="text-blue-500 hover:text-blue-600"
                         >
-                          Edit
+                          <PencilAltIcon className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDeleteTask(column, task.id)}
                           className="text-red-500 hover:text-red-600"
                         >
-                          Delete
+                          <TrashIcon className="w-5 h-5" />
                         </button>
                       </div>
                     </li>
