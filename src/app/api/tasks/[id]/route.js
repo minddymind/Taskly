@@ -28,7 +28,7 @@ export async function PUT(req, { params }) {
   const statusMapping = {
     to_do: "to_do",
     doing: "in_progress",
-    done: "complete",
+    done: "completed",
   };
 
   const mappedStatus = statusMapping[body.progress_status];
