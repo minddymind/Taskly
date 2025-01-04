@@ -310,23 +310,23 @@ const Taskly = () => {
                   </div>
                 )}
                 <ul className="space-y-3 overflow-auto">
-                  {columns[column].map((task) => (
+                  {columns[column].map((task, index) => (
                     <li
-                      key={task.id}
+                      key={task.id || task.todo_id || index} // Fallback to index if no id is available
                       className="bg-gray-200 p-4 rounded-lg flex justify-between items-center transition-all hover:bg-gray-300"
                     >
                       <span className="text-gray-700 break-words">{task.name || task.todo_title}</span>
-                      <span className="text-sm text-gray-500">{task.user || task.owner_id}</span> {/* แสดงชื่อผู้ใช้งาน */}
+                      <span className="text-sm text-gray-500">{task.user || task.owner_id}</span> {/* Display user */}
                       {currentUser?.emp_id === task.owner_id && (
                         <div className="space-x-4 flex items-center">
                           <button
-                            onClick={() => handleEditTask(column, task.id||task.todo_id)}
+                            onClick={() => handleEditTask(column, task.id || task.todo_id)}
                             className="text-blue-500 hover:text-blue-600"
                           >
                             <PencilAltIcon className="w-5 h-5" />
                           </button>
                           <button
-                            onClick={() => handleDeleteTask(column, task.id||task.todo_id)}
+                            onClick={() => handleDeleteTask(column, task.id || task.todo_id)}
                             className="text-red-500 hover:text-red-600"
                           >
                             <TrashIcon className="w-5 h-5" />
@@ -336,6 +336,7 @@ const Taskly = () => {
                     </li>
                   ))}
                 </ul>
+
               </div>
             ))}
           </div>
