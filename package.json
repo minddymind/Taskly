@@ -20,6 +20,7 @@
     "next-auth": "^4.24.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "sweetalert2": "^11.15.10",
     "zod": "^3.24.1"
   },
   "devDependencies": {
