@@ -96,7 +96,7 @@ export async function POST(request) {
         return NextResponse.json({ user: rest, message: "User created successfully" }, { status: 201 });
     } catch (e) {
         // return NextResponse.error(e);
-        console.error("An unexpected error occurred:", e);
+        console.log("An unexpected error occurred:", e);
         return NextResponse.json({ message: "Something went wrong" }, { status: 500 });
     }
 }
@@ -145,7 +145,7 @@ export async function GET(req) {
             { status: 200, headers: { 'Content-Type': 'application/json' } }
         );
     } catch (error) {
-        console.error('Error fetching user:', error);
+        console.log('Error fetching user:', error);
         return new Response(JSON.stringify({ error: 'Failed to fetch user data' }), { status: 500 });
     }
 }
