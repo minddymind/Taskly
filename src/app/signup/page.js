@@ -61,7 +61,7 @@ export default function Signup() {
       }
     } catch (error) {
       setError("Something went wrong. Please try again.");
-      console.error("An unexpected error occurred:", error);
+      console.log("An unexpected error occurred:", error);
     }
 
     // setError("");
