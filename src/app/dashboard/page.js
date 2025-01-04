@@ -2,6 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
+import Swal from "sweetalert2";
 import { PencilAltIcon, TrashIcon, LogoutIcon, HomeIcon, UsersIcon } from '@heroicons/react/outline'; // นำเข้าไอคอน Home และ Users
 
 const Taskly = () => {
@@ -106,56 +107,73 @@ const Taskly = () => {
   };
 
   const handleEditTask = async (column, taskId) => {
-    // console.log('Editing Task:', { column, taskId });
-
     if (!taskId) {
-      console.log('Task ID is undefined');
+      console.log("Task ID is undefined");
       return;
     }
-
-    const task = columns[column]?.find((task) => task.id||task.todo_id === taskId);
-    // console.log('Task found:', task);
-
+  
+    const task = columns[column]?.find(
+      (task) => task.id === taskId || task.todo_id === taskId
+    );
+  
     if (!task) {
-      console.log('Task not found or missing ID');
+      console.log("Task not found or missing ID");
       return;
     }
-
-    const newTaskName = prompt('Edit task title:', task.name);
-    // const newTaskDetail = prompt('Edit task detail (optional):', task.detail || '');
-
-
   
-    if (newTaskName) {
-      try {
-        const response = await fetch(`../api/tasks/${taskId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            todo_title: newTaskName,
-            // todo_detail: newTaskDetail,
-            progress_status: column.replace(' ', '_').toLowerCase(),
-            user_id: currentUser.emp_id,
-          }),
-        });
+    // Use SweetAlert2 for better UX
+    const { value: newTaskName } = await Swal.fire({
+      title: "Edit Task Title",
+      input: "text",
+      inputValue: task.name,
+      showCancelButton: true,
+      inputPlaceholder: "Enter new task title",
+    });
   
-        if (!response.ok) throw new Error('Failed to edit task');
+    if (!newTaskName) {
+      console.log("Task title edit canceled.");
+      return;
+    }
   
-        const updatedTask = await response.json();
-
-        setColumns((prevColumns) => ({
-          ...prevColumns,
-          [column]: prevColumns[column].map((t) =>
-            t.id === taskId || t.todo_id === taskId
-              ? { ...t, name: updatedTask.todo_title, todo_title: updatedTask.todo_title }
-              : t
-          ),
-        }));
-      } catch (error) {
-        console.log('Error editing task:', error);
+    try {
+      const response = await fetch(`../api/tasks/${taskId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          todo_title: newTaskName,
+          progress_status: column.replace(" ", "_").toLowerCase(),
+          user_id: currentUser.emp_id,
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorDetails = await response.json();
+        console.error("API Error:", errorDetails);
+        throw new Error("Failed to edit task");
       }
+  
+      const updatedTask = await response.json();
+  
+      setColumns((prevColumns) => ({
+        ...prevColumns,
+        [column]: prevColumns[column].map((t) =>
+          t.id === taskId || t.todo_id === taskId
+            ? {
+                ...t,
+                name: updatedTask.todo_title,
+                todo_title: updatedTask.todo_title,
+              }
+            : t
+        ),
+      }));
+  
+      Swal.fire("Success", "Task updated successfully!", "success");
+    } catch (error) {
+      console.error("Error editing task:", error);
+      Swal.fire("Error", "Failed to edit the task. Please try again.", "error");
     }
   };
+  
 
   const handleDeleteTask = async (column, taskId) => {
     try {
@@ -177,10 +195,24 @@ const Taskly = () => {
   const handleLogout = () => {
     // alert("Logging out..."); // เพิ่มการดำเนินการเมื่อ logout เช่น redirect หรือ clear session
     // signOut({ callbackUrl: "/login" });
-    const confirmed = confirm("Are you sure you want to log out?");
-    if (confirmed) {
-      signOut({ callbackUrl: "/login" });
-    }
+
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'You are about to log out!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#7066e0',
+      cancelButtonColor: '#545454',
+      confirmButtonText: 'Yes, log out!',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Proceed with logout action
+        // Add your logout logic here
+        console.log('Logging out...');
+        signOut({ callbackUrl: "/" });
+        // For example: redirect to login page or clear user data
+      }
+    });
   };
 
   // สีที่ใช้สำหรับ border ของแต่ละคอลัมน์
@@ -317,7 +349,7 @@ const Taskly = () => {
                     >
                       <span className="text-gray-700 break-words">{task.name || task.todo_title}</span>
                       <span className="text-sm text-gray-500">{task.user || task.owner_id}</span> {/* Display user */}
-                      {currentUser?.emp_id === task.owner_id && (
+                      {currentUser?.emp_id === (task.user||task.owner_id) && (
                         <div className="space-x-4 flex items-center">
                           <button
                             onClick={() => handleEditTask(column, task.id || task.todo_id)}
@@ -326,7 +358,23 @@ const Taskly = () => {
                             <PencilAltIcon className="w-5 h-5" />
                           </button>
                           <button
-                            onClick={() => handleDeleteTask(column, task.id || task.todo_id)}
+                            onClick={() => {
+                              Swal.fire({
+                                title: "Are you sure?",
+                                text: "This action cannot be undone.",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonColor: "#7066e0",
+                                cancelButtonColor: "#545454",
+                                confirmButtonText: "Yes, delete it!",
+                                cancelButtonText: "Cancel",
+                              }).then((result) => {
+                                if (result.isConfirmed) {
+                                  handleDeleteTask(column, task.id || task.todo_id);
+                                  Swal.fire("Deleted!", "Your task has been deleted.", "success");
+                                }
+                              });
+                            }}
                             className="text-red-500 hover:text-red-600"
                           >
                             <TrashIcon className="w-5 h-5" />
