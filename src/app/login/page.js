@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react";
+import { signIn } from "next-auth/react"; 
 // import { useRouter } from "next/router";
 
 export default function Login() {
@@ -10,7 +11,7 @@ export default function Login() {
   // const router = useRouter();
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validate input
@@ -21,10 +22,25 @@ export default function Login() {
 
     // If validation passes, proceed to the next page
     setError("");
+
+    // Sign in
+    const result = await signIn("credentials", {
+      redirect: false, // Redirect to the secure dashboard page after successful login
+      // callbackUrl: "/dashboard", // Redirect to the dashboard page after successful login
+      employeeId: employeeId,
+      password: password,
+    });
+    // console.log(result);
+
+    if (result?.error){
+      setError("Invalid credentials. Please try again."); // Show an error message if login fails
+    } else if (result?.ok) {
+      window.location.href = "/dashboard"; // Redirect to the dashboard page after successful login
+    }
     // router.push("/");  // redirect after successful login
-    setTimeout(() => {
-      window.location.href = "/dashboard"; // This will navigate to the dashboard page after 1 second
-    }, 1000); // Wait for 1 second before redirecting
+    // setTimeout(() => {
+    //   window.location.href = "/dashboard"; // This will navigate to the dashboard page after 1 second
+    // }, 1000); // Wait for 1 second before redirecting
   };
 
   // Handle "Sign up" link click with delay

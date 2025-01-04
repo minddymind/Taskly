@@ -19,7 +19,7 @@ export default function Signup() {
 //     setIsClient(true); // Ensure the component is rendered client-side
 //   }, []);
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
         setError("Password does not match");
@@ -31,18 +31,47 @@ export default function Signup() {
         setError("Please fill in all required fields");
         console.log("Please fill in all required fields");
         return;
-    } else {
-        console.log("Successfull Signup");
+    } //else {
+    //     console.log("Successfull Signup");
+    // }
+
+    try {
+      const response = await fetch("/api/user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          emp_id: parseInt(employeeId),
+          dept_name: department,
+          acc_name: accountName,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok){
+        setSuccessMessage("Signup successful! Redirecting to login page...");
+        setTimeout(() => {
+            window.location.href = "/login"; // This will navigate to the login page after 1 second
+          }, 1000); // Wait for 1 second before redirecting
+      } else {
+        setError(data.message || "Something went wrong. Please try again.");
+      }
+    } catch (error) {
+      setError("Something went wrong. Please try again.");
+      console.error("An unexpected error occurred:", error);
     }
 
-    setError("");
-    setSuccessMessage("Signup successful! Redirecting to login page...");
+    // setError("");
+    // setSuccessMessage("Signup successful! Redirecting to login page...");
     // router.push("/login");  // redirect after successful signup
     // Redirect to /login page after successful signup
-    setTimeout(() => {
-        window.location.href = "/login"; // This will navigate to the login page after 1 second
-      }, 1000); // Wait for 1 second before redirecting
-    };
+    // setTimeout(() => {
+    //     window.location.href = "/login"; // This will navigate to the login page after 1 second
+    //   }, 1000); // Wait for 1 second before redirecting
+  };
 
 
   return (
