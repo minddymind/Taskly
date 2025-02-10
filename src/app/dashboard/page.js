@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import { LogoutIcon, HomeIcon, ClipboardListIcon, Bars3Icon } from '@heroicons/react/outline';
+import Swal from "sweetalert2";
+import { LogoutIcon, HomeIcon, ClipboardListIcon } from '@heroicons/react/outline';
 
 export default function Dashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date());
