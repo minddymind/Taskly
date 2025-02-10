@@ -1,21 +1,12 @@
 'use client';
 
-import { signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
-import Swal from "sweetalert2";
-import { PencilAltIcon, TrashIcon, LogoutIcon, HomeIcon, UsersIcon } from '@heroicons/react/outline'; // นำเข้าไอคอน Home และ Users
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import { LogoutIcon, HomeIcon, ClipboardListIcon, Bars3Icon } from '@heroicons/react/outline';
 
-const Taskly = () => {
-
-  const [currentUser, setCurrentUser] = useState(null);
-  const [columns, setColumns] = useState({
-    "To Do": [],
-    "Doing": [],
-    "Done": [],
-  });
-  const [isAdding, setIsAdding] = useState({});
-  const [newTask, setNewTask] = useState("");
-  const [showMembers, setShowMembers] = useState(false);
+export default function Dashboard() {
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -43,153 +34,62 @@ const Taskly = () => {
     fetchUser();
   }, []);
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await fetch(`../api/tasks/owned?ownerId=${currentUser?.emp_id}`);
-        if (!response.ok) throw new Error('Failed to fetch tasks');
-        const tasks = await response.json();
+  // Example task list with deadlines in ISO format for easier date manipulation
+  const [tasks, setTasks] = useState([
+    { name: "Working on Asia Project", deadline: "2025-02-17T08:00:00", completed: false },
+    { name: "Team Meeting", deadline: "2025-02-15T10:00:00", completed: false },
+    { name: "Doing Research", deadline: "2025-02-16T12:00:00", completed: false },
+    { name: "Submit Report", deadline: "2025-02-18T17:00:00", completed: false },
+    { name: "Submit Report", deadline: "2025-02-11T17:00:00", completed: false },
+  ]);
 
-        const groupedTasks = {
-          "To Do": tasks.filter((task) => task.progress_status === 'to_do'),
-          "Doing": tasks.filter((task) => task.progress_status === 'in_progress'),
-          "Done": tasks.filter((task) => task.progress_status === 'completed'),
-        };
-
-        setColumns(groupedTasks);
-      } catch (error) {
-        // console.error('Error fetching tasks:', error);
-        console.log('Error fetching tasks:',error);
-      }
-    };
-
-    if (currentUser) fetchTasks();
-  }, [currentUser]);
-
-  const handleAddTask = async (column) => {
-    if (newTask.trim() && currentUser) {
-      try {
-        const response = await fetch('../api/tasks', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            todo_title: newTask,
-            progress_status: column.replace(' ', '_').toLowerCase(), // Convert column to valid enum value
-            owner_id: currentUser.emp_id,
-          }),
-        });
-  
-        if (!response.ok) throw new Error('Failed to add task');
-  
-        const createdTask = await response.json();
-  
-        setColumns((prevColumns) => ({
-          ...prevColumns,
-          [column]: [
-            ...prevColumns[column],
-            {
-              id: createdTask.todo_id,
-              name: createdTask.todo_title, // Update if this is used in UI
-              user: createdTask.owner_id,   // Update if this is used in UI
-            },
-          ],
-        }));
-  
-        setNewTask('');
-        setIsAdding((prev) => ({ ...prev, [column]: false }));
-      } catch (error) {
-        // console.error('Error adding task:', error);
-        console.log('Error adding task:',error);
-      }
-    }
+  // Function to calculate the days left until the deadline
+  const getDaysLeft = (deadline) => {
+    const now = new Date();
+    const taskDeadline = new Date(deadline);
+    const timeDiff = taskDeadline - now;
+    const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24)); // Convert time difference to days
+    return daysLeft;
   };
 
-  const handleEditTask = async (column, taskId) => {
-    if (!taskId) {
-      console.log("Task ID is undefined");
-      return;
-    }
-  
-    const task = columns[column]?.find(
-      (task) => task.id === taskId || task.todo_id === taskId
+  // Function to check if a task is for today
+  const isTaskToday = (deadline) => {
+    const now = new Date();
+    const taskDeadline = new Date(deadline);
+    return (
+      now.getFullYear() === taskDeadline.getFullYear() &&
+      now.getMonth() === taskDeadline.getMonth() &&
+      now.getDate() === taskDeadline.getDate()
     );
-  
-    if (!task) {
-      console.log("Task not found or missing ID");
-      return;
-    }
-  
-    // Use SweetAlert2 for better UX
-    const { value: newTaskName } = await Swal.fire({
-      title: "Edit Task Title",
-      input: "text",
-      inputValue: task.name,
-      showCancelButton: true,
-      inputPlaceholder: "Enter new task title",
-    });
-  
-    if (!newTaskName) {
-      console.log("Task title edit canceled.");
-      return;
-    }
-  
-    try {
-      const response = await fetch(`../api/tasks/${taskId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          todo_title: newTaskName,
-          progress_status: column.replace(" ", "_").toLowerCase(),
-          user_id: currentUser.emp_id,
-        }),
-      });
-  
-      if (!response.ok) {
-        const errorDetails = await response.json();
-        console.error("API Error:", errorDetails);
-        throw new Error("Failed to edit task");
-      }
-  
-      const updatedTask = await response.json();
-  
-      setColumns((prevColumns) => ({
-        ...prevColumns,
-        [column]: prevColumns[column].map((t) =>
-          t.id === taskId || t.todo_id === taskId
-            ? {
-                ...t,
-                name: updatedTask.todo_title,
-                todo_title: updatedTask.todo_title,
-              }
-            : t
-        ),
-      }));
-  
-      Swal.fire("Success", "Task updated successfully!", "success");
-    } catch (error) {
-      console.error("Error editing task:", error);
-      Swal.fire("Error", "Failed to edit the task. Please try again.", "error");
+  };
+
+  // Example team progress data (can be dynamic)
+  const teamProgress = {
+    progress: 75, // Progress in percentage
+  };
+
+  const individualProgress = {
+    progress: 50, // Progress in percentage
+  };
+
+  // Function to determine the progress bar color
+  const getProgressBarColor = (progress) => {
+    if (progress === 100) {
+      return 'bg-green-500'; // Green color for 100% completion
+    } else if (progress >= 75) {
+      return 'bg-blue-500'; // Blue color for progress >= 75%
+    } else if (progress >= 50) {
+      return 'bg-yellow-500'; // Yellow color for progress >= 50%
+    } else {
+      return 'bg-red-500'; // Red color for progress < 50%
     }
   };
-  
 
-  const handleDeleteTask = async (column, taskId) => {
-    try {
-      const response = await fetch(`../api/tasks/${taskId}`, {
-        method: 'DELETE',
-      });
-  
-      if (!response.ok) throw new Error('Failed to delete task');
-  
-      setColumns((prevColumns) => ({
-        ...prevColumns,
-        [column]: prevColumns[column].filter((task) => task.id !== taskId && task.todo_id !== taskId),
-      }));
-    } catch (error) {
-      console.log('Error deleting task:', error);
-    }
+  // Handle checkbox toggle
+  const toggleTaskCompletion = (taskName) => {
+    setTasks(tasks.map(task =>
+      task.name === taskName ? { ...task, completed: !task.completed } : task
+    ));
   };
 
   const handleLogout = () => {
@@ -215,183 +115,155 @@ const Taskly = () => {
     });
   };
 
-  // สีที่ใช้สำหรับ border ของแต่ละคอลัมน์
-  const columnBorderColors = {
-    "To Do": "bg-blue-500",
-    "Doing": "bg-yellow-500",
-    "Done": "bg-green-500",
-  };
-
   return (
-    <div className="flex h-screen text-gray-800">
+    <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
       <aside className="w-64 bg-gray-800 text-white p-6 flex flex-col shadow-lg rounded-r-2xl backdrop-blur-md">
         <h1 className="text-4xl font-bold mb-8">Taskly</h1>
-        {currentUser ? (
-          <div className="flex items-center mb-6 border-t border-b border-gray-700 pt-4 pb-4">
-            <img src={currentUser.avatar} alt="User Avatar" className="w-12 h-12 rounded-full mr-3" />
-            <div>
-              <span className="text-xl font-semibold">{currentUser.acc_name}</span>
-              <span className="block text-sm text-gray-500 mt-1">ID: {currentUser.emp_id}</span>
-              <span className="block text-sm text-gray-500 mt">{currentUser.department}</span>
-            </div>
+        <div className="flex items-center mb-6 border-t border-b border-gray-700 pt-4 pb-4">
+          {/* <img src={currentUser.avatar} alt="User Avatar" className="w-12 h-12 rounded-full mr-3" /> */}
+          <div>
+            <span className="text-xl font-semibold">Sunny</span>
+            <span className="block text-sm text-gray-500 mt-1">ID: 650510666</span>
+            <span className="block text-sm text-gray-500 mt">Developer</span>
           </div>
-        ) : (
-          <div className="text-gray-500">Loading user...</div>
-        )}
+        </div>
         <ul>
-          <li className="mb-4 flex items-center hover:text-blue-500 transition duration-200 ease-in-out">
-            <HomeIcon className="w-5 h-5 mr-2" />
-            <a href="/" className="hover:text-blue-500">Home</a>
+          <li className="mb-4 cursor-pointer flex items-center hover:text-blue-500 transition duration-200 ease-in-out">
+            <HomeIcon className="h-6 w-6 mr-1" />
+            <a href="/dashboard" className="hover:text-blue-500">Dashboard</a>
           </li>
-          <li
-            className="mb-4 cursor-pointer flex items-center hover:text-blue-500 transition duration-200 ease-in-out"
-            onClick={() => setShowMembers(!showMembers)}
-          >
-            <UsersIcon className="w-5 h-5 mr-2" />
-            Members
+          <li className="mb-4 cursor-pointer flex items-center hover:text-blue-500 transition duration-200 ease-in-out">
+            <ClipboardListIcon className="h-6 w-6 mr-1" />
+            <a href="/task" className="hover:text-blue-500">Tasks</a>
           </li>
-          {currentUser ? (
-            <div>
-              {showMembers && (
-                <ul className="ml-4 mt-2">
-                  {currentUser.members.map((member, index) => (
-                    <li key={index} className="mb-1">{member}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ) : (
-            <div className="text-gray-500">Loading members...</div>
-          )}
         </ul>
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col bg-white bg-opacity-70 backdrop-blur-md rounded-l-2xl">
-        {/* Top Navbar */}
-        <header className="bg-white shadow-md p-4 flex justify-between items-center">
-          {currentUser ? (
-            <h2 className="text-xl font-semibold text-gray-800 ml-4">{currentUser.department} Board</h2>
-          ) : (
-            <div className="text-gray-500">Loading department...</div>
-          )}
-          {currentUser ? (
-            <div className="flex items-center">
-              <img src={currentUser.avatar} alt="User Avatar" className="w-8 h-8 rounded-full mr-2" />
-              <span>{currentUser.acc_name}</span>
-              <button
-                onClick={handleLogout}
-                className="ml-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
-              >
-                <LogoutIcon className="w-5 h-5" />
-              </button>
-            </div>
-          ) : (
-            <div className="text-gray-500">Loading user...</div>
-          )}
-        </header>
-
-        {/* Board Content */}
-        <main className="flex-1 p-6 overflow-auto bg-gray-100 backdrop-blur-md">
-          <div className="grid grid-cols-3 gap-8">
-            {Object.keys(columns).map((column) => (
-              <div
-                key={column}
-                className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-all backdrop-blur-md"
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {column}
-                    <span
-                      className={`ml-2 text-sm text-white px-2 py-1 rounded-full ${columnBorderColors[column]}`}
-                    >
-                      {columns[column].length}
-                    </span>
-                  </h3>
-                  <button
-                    onClick={() => setIsAdding((prev) => ({ ...prev, [column]: !prev[column] }))}
-                    className="bg-gray-700 text-white px-3 py-1 rounded-lg hover:bg-gray-900 transition"
-                  >
-                    + Add Task
-                  </button>
-                </div>
-                {isAdding[column] && (
-                  <div className="mb-4">
-                    <input
-                      type="text"
-                      placeholder="Enter a task title"
-                      value={newTask}
-                      onChange={(e) => setNewTask(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg mb-3"
-                    />
-                    <div className="flex justify-between">
-                      <button
-                        onClick={() => handleAddTask(column)}
-                        className="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition"
-                      >
-                        Add
-                      </button>
-                      <button
-                        onClick={() => setIsAdding((prev) => ({ ...prev, [column]: false }))}
-                        className="text-red-500 px-4 py-2"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                )}
-                <ul className="space-y-3 overflow-auto">
-                  {columns[column].map((task, index) => (
-                    <li
-                      key={task.id || task.todo_id || index} // Fallback to index if no id is available
-                      className="bg-gray-200 p-4 rounded-lg flex justify-between items-center transition-all hover:bg-gray-300"
-                    >
-                      <span className="text-gray-700 break-words">{task.name || task.todo_title}</span>
-                      <span className="text-sm text-gray-500">{task.user || task.owner_id}</span> {/* Display user */}
-                      {currentUser?.emp_id === (task.user||task.owner_id) && (
-                        <div className="space-x-4 flex items-center">
-                          <button
-                            onClick={() => handleEditTask(column, task.id || task.todo_id)}
-                            className="text-blue-500 hover:text-blue-600"
-                          >
-                            <PencilAltIcon className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              Swal.fire({
-                                title: "Are you sure?",
-                                text: "This action cannot be undone.",
-                                icon: "warning",
-                                showCancelButton: true,
-                                confirmButtonColor: "#7066e0",
-                                cancelButtonColor: "#545454",
-                                confirmButtonText: "Yes, delete it!",
-                                cancelButtonText: "Cancel",
-                              }).then((result) => {
-                                if (result.isConfirmed) {
-                                  handleDeleteTask(column, task.id || task.todo_id);
-                                  Swal.fire("Deleted!", "Your task has been deleted.", "success");
-                                }
-                              });
-                            }}
-                            className="text-red-500 hover:text-red-600"
-                          >
-                            <TrashIcon className="w-5 h-5" />
-                          </button>
-                        </div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-
-              </div>
-            ))}
+      <div className="flex-1 p-8">
+        <header className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold">Welcome, Sunny!</h2>
+          <div className="flex items-center">
+            {/* <img src={currentUser.avatar} alt="User Avatar" className="w-8 h-8 rounded-full mr-2" /> */}
+            <span>Log out</span>
+            <button
+              onClick={handleLogout}
+              className="ml-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+            >
+              <LogoutIcon className="w-5 h-5" href="/" />
+            </button>
           </div>
-        </main>
+        </header>
+        
+        <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-6xl mx-auto mt-10 flex flex-col lg:flex-row">
+          <div className="w-full lg:w-2/3">
+            <h3 className="font-bold text-lg mb-3 text-center">Calendar</h3>
+            <Calendar 
+              onChange={setSelectedDate} 
+              value={selectedDate} 
+              tileClassName="rounded-lg"
+              next2Label={null} prev2Label={null}
+              nextLabel=">" prevLabel="<"
+              minDetail="month"
+              showNeighboringMonth={false}
+            />
+          </div>
+
+          <div className="w-full lg:ml-6 mt-6 lg:mt-0">
+            {/* Today’s Task */}
+            <div className="bg-blue-100 shadow-md rounded-lg p-4 mb-6">
+              <h3 className="font-bold text-lg mb-3 text-blue-700">Today’s Task  📌 </h3>
+              <ul>
+                {tasks.filter(task => isTaskToday(task.deadline)).map((task, index) => {
+                  const daysLeft = getDaysLeft(task.deadline); 
+                  return (
+                    <li key={index} className="py-2 flex items-center">
+                      <input 
+                        type="checkbox" 
+                        checked={task.completed} 
+                        onChange={() => toggleTaskCompletion(task.name)} 
+                        className="mr-2"
+                      />
+                      {task.name} - <span className="text-gray-500">{task.deadline.slice(11, 16)}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+
+            {/* Reminder */}
+            <div className="bg-yellow-100 shadow-md rounded-lg p-4">
+              <h3 className="font-bold text-lg mb-3 text-yellow-700">Reminder 🔔</h3>
+              <ul>
+                {tasks.filter(task => !isTaskToday(task.deadline)).map((task, index) => {
+                  const daysLeft = getDaysLeft(task.deadline);
+                  return (
+                    <li key={index} className="py-2 flex items-center">
+                      <input 
+                        type="checkbox" 
+                        checked={task.completed} 
+                        onChange={() => toggleTaskCompletion(task.name)} 
+                        className="mr-2"
+                      />
+                      {task.name} - <span className="text-gray-500">{task.deadline.slice(11, 16)}</span>
+                      <span className="ml-2 text-red-500">{daysLeft} days left</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+
+          <div className="w-full lg:w-1/3 lg:ml-6 mt-6 lg:mt-0">
+            {/* Team Data */}
+            <div className="bg-green-100 shadow-md rounded-lg p-4 mb-6">
+              <h3 className="font-bold text-lg mb-3 text-green-700">Team Overview</h3>
+              <ul>
+                <li className="py-2">
+                  <span className="font-semibold">Team Members:</span> 5 people
+                </li>
+                <li className="py-2">
+                  <span className="font-semibold">Current Tasks:</span> 10 tasks
+                </li>
+                <li className="py-2">
+                  <span className="font-semibold">Current Projects:</span> Payment system
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Individual Progress */}
+        <div className="bg-white shadow-md rounded-lg p-4 mb-4 mt-4">
+          <h3 className="font-bold text-lg mb-3 text-purple-700">Your Progress 📈</h3>
+          <div className="space-y-2">
+            <p>{individualProgress.name}</p>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div
+                className={`h-3 rounded-full ${getProgressBarColor(individualProgress.progress)}`}
+                style={{ width: `${individualProgress.progress}%` }}
+              ></div>
+            </div>
+            <div className="text-sm text-right">{individualProgress.progress}% Complete</div>
+          </div>
+        </div>
+
+        {/* Team Progress */}
+        <div className="bg-white shadow-md rounded-lg p-4">
+          <h3 className="font-bold text-lg mb-3 text-indigo-700">Developer Team Progress 📈</h3>
+          <div className="space-y-2">
+            <p>{teamProgress.name}</p>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div
+                className={`h-3 rounded-full ${getProgressBarColor(teamProgress.progress)}`}
+                style={{ width: `${teamProgress.progress}%` }}
+              ></div>
+            </div>
+            <div className="text-sm text-right">{teamProgress.progress}% Complete</div>
+          </div>
+        </div>
       </div>
     </div>
   );
-};
-
-export default Taskly;
+}
