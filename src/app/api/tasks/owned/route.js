@@ -16,7 +16,7 @@ export async function GET(req) {
 
   try {
     const { searchParams } = new URL(req.url);
-    const ownerId = parseInt(searchParams.get('ownerId'), 10);
+    const ownerId = parseInt(searchParams.get('ownerId'));
 
     if (isNaN(ownerId)) {
       return new Response(JSON.stringify({ error: 'Invalid owner ID' }), {

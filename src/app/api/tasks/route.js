@@ -31,7 +31,7 @@ export async function POST(req) {
       done: "completed",
     };
   
-    const mappedStatus = statusMapping[body.progress_status];
+    const mappedStatus = statusMapping[progress_status];
     if (!mappedStatus) {
       return NextResponse.json(
         { error: "Invalid progress_status value" },
@@ -44,7 +44,7 @@ export async function POST(req) {
         todo_title: todo_title,
         todo_detail: todo_detail || null,
         progress_status: mappedStatus, // Use normalized status
-        owner_id: parseInt(owner_id, 10),
+        owner_id: parseInt(owner_id),
       },
     });
 
