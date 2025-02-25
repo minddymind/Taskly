@@ -56,8 +56,7 @@ export default function Dashboard() {
           {/* calendar */}
           <Calendarmini></Calendarmini>
           <Tasks></Tasks>
-          <TeamData></TeamData>
-          
+          <TeamData></TeamData>   
         </div>
         <Progress></Progress>
       </div>
