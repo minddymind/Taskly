@@ -14,9 +14,9 @@ export default function DashboardLayout({ children }) {
     }
   }, [status, router]);
 
-  if (status === "loading") {
-    return <p>Loading...</p>; // You can add a loading spinner here
-  }
+  // if (status === "loading") {
+  //   return <p>Loading...</p>; // You can add a loading spinner here
+  // }
 
   if (status === "authenticated") {
     return <>{children}</>;

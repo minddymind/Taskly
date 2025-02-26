@@ -2,6 +2,7 @@
 
 import Swal from "sweetalert2";
 import { LogoutIcon, HomeIcon, ClipboardListIcon } from '@heroicons/react/outline';
+import { signOut } from "next-auth/react";
 
 
 export default function Logout() {
