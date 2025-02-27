@@ -1,4 +1,5 @@
 'use client'
+import Clock from "./clock";
 
 export default function TeamData() {
     return(
@@ -18,6 +19,8 @@ export default function TeamData() {
                 </li>
                 </ul>
             </div>
+            {/* clock */}
+            <Clock></Clock>
         </div>
     );
 }
