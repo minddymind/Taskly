@@ -3,8 +3,10 @@ import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import Redis from 'ioredis';
 
 const prisma = new PrismaClient();
+const redis = new Redis(process.env.REDIS_URL);
 
 export async function PUT(req, { params }) {
   
@@ -40,7 +42,18 @@ export async function PUT(req, { params }) {
   }
 
   try {
-    // Example: Update the task in the database
+
+    // Fetch the task to find the owner before updating
+    const task = await prisma.toDo.findUnique({
+      where: { todo_id: parseInt(id) },
+      select: { owner_id: true },
+    });
+
+    if (!task) {
+      return new Response(JSON.stringify({ error: "Task not found" }), { status: 404 });
+    }
+
+    // Update the task in the database
     const updatedTask = await prisma.toDo.update({
       where: { todo_id: parseInt(id) },
       data: {
@@ -50,6 +63,9 @@ export async function PUT(req, { params }) {
         updated_at: new Date(),
       },
     });
+
+    // Clear the cache for the task's owner
+    await redis.del(`tasks:${task.owner_id}`);
 
     return new Response(JSON.stringify(updatedTask), { status: 200 });
   } catch (error) {
@@ -72,11 +88,25 @@ export async function DELETE(req, { params }) {
   const { id } = await params; // Extract the dynamic ID from the URL
 
   try {
-    // Example: Delete the task in the database
+
+    // Fetch the task to find the owner before deleting
+    const task = await prisma.toDo.findUnique({
+      where: { todo_id: parseInt(id) },
+      select: { owner_id: true },
+    });
+
+    if (!task) {
+      return new Response(JSON.stringify({ error: "Task not found" }), { status: 404 });
+    }
+
+    // Delete the task in the database
     await prisma.toDo.update({
       where: { todo_id: parseInt(id) },
       data: { isDeleted: true },
     });
+
+    // Clear the cache for the task's owner
+    await redis.del(`tasks:${task.owner_id}`);
 
     return new Response(JSON.stringify({ message: 'Task deleted successfully' }), { status: 200 });
   } catch (error) {

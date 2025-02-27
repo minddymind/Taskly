@@ -1,8 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import Redis from 'ioredis';
 
 const prisma = new PrismaClient();
+const redis = new Redis(process.env.REDIS_URL);
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
@@ -25,6 +27,17 @@ export async function GET(req) {
       });
     }
 
+    const cacheKey = `tasks:${ownerId}`;
+    const cachedTasks = await redis.get(cacheKey);
+
+    if (cachedTasks){
+      console.log("Serving from cache...");
+      return new Response(cachedTasks, {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     const userDept = await prisma.employee.findUnique({
       where: { emp_id: ownerId },
       select: {
@@ -35,6 +48,13 @@ export async function GET(req) {
         },
       },
     });
+
+    if (!userDept) {
+      return new Response(JSON.stringify({ error: 'User not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
     const members = await prisma.employee.findMany({
       where: {
@@ -55,6 +75,8 @@ export async function GET(req) {
         isDeleted: false, // Fetch only non-deleted tasks
       },
     });
+
+    await redis.set(cacheKey, JSON.stringify(tasks), 'EX', 300); // Cache for 5 minutes
 
     return new Response(JSON.stringify(tasks), {
       status: 200,
