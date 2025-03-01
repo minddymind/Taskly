@@ -1,26 +1,31 @@
-FROM node:18-alpine
+FROM node:18-alpine AS builder
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy environment and package files
+# Install dependencies separately to leverage Docker cache
 COPY package*.json ./
+RUN npm install --frozen-lockfile
 
-# Install dependencies
-RUN npm install
-
-# Copy all application source files into the container
+# Copy only necessary source files first
+COPY prisma ./prisma
 COPY . .
 
-# Generate Prisma Client
-RUN npx prisma generate
+# Generate Prisma Client & Build application
+RUN npx prisma generate && npm run build
 
-# Build the application
-RUN npm run build
+# -- Production Image --
+FROM node:18-alpine AS runner
+WORKDIR /app
 
-# Expose port 3000 
+# Copy only required files from the builder stage
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/prisma ./prisma
+
+# Expose port
 EXPOSE 3000
 
-# RUN npm run build
-# Run database migrations seed nessescary data and start the application 
-CMD ["npm","run","start"]
+# Start the application
+CMD ["npm", "run", "start"]
