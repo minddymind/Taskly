@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 // import { db } from "@/lib/db";
-import { PrismaClient } from "@prisma/client";
+// import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import * as z from "zod";
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 //Define a schema for validation
 const userSchema = z.object({

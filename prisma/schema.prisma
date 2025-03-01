@@ -49,6 +49,7 @@ model ToDo{
   finish_at  DateTime?
   updated_at  DateTime  @updatedAt
   isDeleted  Boolean  @default(false)
+  deadline  DateTime?
 
   todoOwner  Employee @relation("owner", fields: [owner_id], references: [emp_id])
 }

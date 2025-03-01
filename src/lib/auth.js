@@ -3,6 +3,11 @@ import NextAuth from "next-auth";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { compare } from "bcryptjs";
 import db from "./db";
+import { Queue } from "bullmq";
+import Redis from "ioredis";
+
+const connection = new Redis(process.env.REDIS_URL);
+const taskQueue = new Queue("taskQueue", { connection });
 
 export const authOptions = {
     adapter: PrismaAdapter(db),
@@ -65,6 +70,9 @@ export const authOptions = {
             if (user) {
                 token.emp_id = user.emp_id;
                 token.acc_name = user.acc_name;
+
+                // Preload tasks after login
+                await taskQueue.add("preloadTasks", { userId: user.emp_id }, { removeOnComplete: true });
               }
 
             return token;
@@ -79,6 +87,13 @@ export const authOptions = {
                 emp_id: token.emp_id,
                 acc_name: token.acc_name,
             };
+
+            // if (token?.emp_id) {
+            //     // Add BullMQ job to preload tasks when the session starts
+            //     await taskQueue.add("preloadTasks", { userId: token.emp_id });
+            //     console.log(`Added job to preload tasks for user ${token.emp_id}`);
+            // }
+
             return session;
         },
     },

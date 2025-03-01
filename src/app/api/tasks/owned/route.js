@@ -1,9 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+// import { PrismaClient } from '@prisma/client';
+import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Redis from 'ioredis';
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 const redis = new Redis(process.env.REDIS_URL);
 
 export async function GET(req) {
@@ -76,7 +77,7 @@ export async function GET(req) {
       },
     });
 
-    await redis.set(cacheKey, JSON.stringify(tasks), 'EX', 300); // Cache for 5 minutes
+    await redis.set(cacheKey, JSON.stringify(tasks), 'EX', 60); // Cache for 5 minutes
 
     return new Response(JSON.stringify(tasks), {
       status: 200,
