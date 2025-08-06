@@ -4,8 +4,6 @@ Welcome to the **To-Do List Web Application**, a simple yet powerful tool design
 
 Whether you're managing personal tasks or collaborating as a team, this app will help you prioritize, organize, and stay on top of everything that matters!
 
-> **Note**: *This project is just starting and is currently a work in progress.* 
-
 ## Key Features
 
 ### 📋 **Task Creation**
